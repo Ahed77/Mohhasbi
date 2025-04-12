@@ -378,7 +378,7 @@
       let debtors = JSON.parse(localStorage.getItem("debtors")) || [
         {
           id: "001",
-          debtorName: "مثال1",
+          debtorName: "أحمد",
           transactions: [
             { amount: 500, date: "2025-01-01", description: "دين مبدئي" },
             { amount: -200, date: "2025-01-05", description: "سداد جزئي" }
@@ -386,7 +386,7 @@
         },
         {
           id: "002",
-          debtorName: "مثال 2",
+          debtorName: "سارة",
           transactions: [
             { amount: 300, date: "2025-02-10", description: "دين مبدئي" }
           ]
@@ -404,7 +404,7 @@
       // دالة عرض الإشعارات (Toast)
       const showToast = (message, type = "success") => {
         const toastEl = document.createElement("div");
-        toastEl.className = toast align-items-center text-bg-${type} border-0 show`;
+        toastEl.className = `toast align-items-center text-bg-${type} border-0 show`;
         toastEl.style.minWidth = "250px";
         toastEl.innerHTML = `
           <div class="d-flex">
