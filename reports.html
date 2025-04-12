@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تقارير النظام - تقارير احترافية</title>
+  <!-- Bootstrap RTL -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Cairo) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Chart.js لتحسين عرض الرسوم البيانية -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f0f2f5;
+      padding-top: 80px;
+    }
+    header {
+      background: linear-gradient(135deg, #4b6cb7, #182848);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+    header p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+    .report-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .card .card-body {
+      text-align: center;
+    }
+    .card .card-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #4b6cb7;
+    }
+    .btn-report {
+      margin: 10px;
+    }
+    .chart-container {
+      margin-top: 40px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>تقارير النظام</h1>
+    <p>ملخص شامل لبيانات المخازن، المبيعات، والديون</p>
+  </header>
+  <div class="report-container">
+    <div class="row g-4">
+      <!-- بطاقة المخازن -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <i class="fa-solid fa-warehouse card-icon"></i>
+            <h5 class="card-title">المخازن</h5>
+            <p id="inventorySummary" class="card-text">تحميل البيانات...</p>
+          </div>
+        </div>
+      </div>
+      <!-- بطاقة المبيعات -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <i class="fa-solid fa-cart-shopping card-icon"></i>
+            <h5 class="card-title">المبيعات</h5>
+            <p id="salesSummary" class="card-text">تحميل البيانات...</p>
+          </div>
+        </div>
+      </div>
+      <!-- بطاقة الديون -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <i class="fa-solid fa-hand-holding-dollar card-icon"></i>
+            <h5 class="card-title">الديون</h5>
+            <p id="debtorsSummary" class="card-text">تحميل البيانات...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- رسم بياني تقارير -->
+    <div class="chart-container mt-5">
+      <canvas id="reportChart" height="100"></canvas>
+    </div>
+
+    <div class="text-center my-4">
+      <button class="btn btn-secondary btn-report" onclick="printReport()">
+        <i class="fa-solid fa-print"></i> طباعة التقرير
+      </button>
+      <button class="btn btn-info btn-report text-white" onclick="shareReport()">
+        <i class="fa-solid fa-share"></i> مشاركة التقرير
+      </button>
+    </div>
+  </div>
+
+  <!-- سكريبتات Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // دالة لتحميل بيانات التقارير من localStorage
+    function loadReports() {
+      // بيانات المخازن
+      const inventoryData = JSON.parse(localStorage.getItem('inventoryProducts')) || [];
+      const totalInventory = inventoryData.length;
+      let totalQuantity = 0;
+      inventoryData.forEach(item => {
+        totalQuantity += Number(item.quantity) || 0;
+      });
+
+      // بيانات المبيعات
+      const salesData = JSON.parse(localStorage.getItem('sales')) || [];
+      const totalSales = salesData.length;
+      let salesTotalAmount = 0;
+      salesData.forEach(sale => {
+        salesTotalAmount += Number(sale.total) || 0;
+      });
+
+      // بيانات الديون
+      const debtorsData = JSON.parse(localStorage.getItem('debtors')) || [];
+      const totalDebtors = debtorsData.length;
+      let totalDebt = 0;
+      debtorsData.forEach(debtor => {
+        const debtorTotal = debtor.transactions.reduce((sum, txn) => sum + Number(txn.amount), 0);
+        totalDebt += debtorTotal;
+      });
+
+      document.getElementById('inventorySummary').innerHTML =
+        'عدد المنتجات: ' + totalInventory + '<br>' +
+        'إجمالي الكميات: ' + totalQuantity;
+
+      document.getElementById('salesSummary').innerHTML =
+        'عدد عمليات البيع: ' + totalSales + '<br>' +
+        'إجمالي المبيعات: ' + salesTotalAmount + ' ريال';
+
+      document.getElementById('debtorsSummary').innerHTML =
+        'عدد المدينين: ' + totalDebtors + '<br>' +
+        'إجمالي الدين: ' + totalDebt + ' ريال';
+
+      // تحديث الرسم البياني
+      updateChart(totalQuantity, salesTotalAmount, totalDebt);
+    }
+
+    // الرسم البياني باستخدام Chart.js
+    let reportChart;
+    function updateChart(inventoryQty, salesAmount, debtAmount) {
+      const ctx = document.getElementById('reportChart').getContext('2d');
+      const data = {
+        labels: ['إجمالي الكميات (المخازن)', 'إجمالي المبيعات (ريال)', 'إجمالي الديون (ريال)'],
+        datasets: [{
+          label: 'ملخص التقرير',
+          data: [inventoryQty, salesAmount, debtAmount],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 99, 132, 0.6)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      };
+
+      if (reportChart) {
+        reportChart.data = data;
+        reportChart.update();
+      } else {
+        reportChart = new Chart(ctx, {
+          type: 'bar',
+          data: data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: 'ملخص التقرير'
+              }
+            }
+          }
+        });
+      }
+    }
+
+    loadReports();
+
+    // دالة طباعة التقرير
+    function printReport() {
+      const printContent = document.querySelector('.report-container').innerHTML;
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>تقرير النظام</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+            <style>
+              body { font-family: 'Cairo', sans-serif; padding: 20px; }
+              header { display: none; }
+            </style>
+          </head>
+          <body>
+            ${printContent}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
+
+    // دالة مشاركة التقرير باستخدام Web Share API
+    function shareReport() {
+      const reportText = `
+        تقارير النظام:
+        ${document.getElementById('inventorySummary').innerText}
+        ${document.getElementById('salesSummary').innerText}
+        ${document.getElementById('debtorsSummary').innerText}
+      `;
+      if (navigator.share) {
+        navigator.share({
+          title: 'تقرير النظام',
+          text: reportText
+        }).then(() => {
+          alert('تم مشاركة التقرير بنجاح!');
+        }).catch(err => {
+          alert('فشل مشاركة التقرير!');
+        });
+      } else {
+        alert('متصفحك لا يدعم ميزة المشاركة؛ قم بنسخ النص لمشاركته.');
+      }
+    }
+  </script>
+</body>
+</html>

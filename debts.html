@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إدارة الديون - التطبيق الموحد</title>
+  <!-- Bootstrap RTL -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <!-- FontAwesome للأيقونات -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Cairo) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <!-- الأنماط المخصصة -->
+  <style>
+    /* إعداد الخط والخلفية العامة مع تأثير تدرجي مميز */
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #e8f0fe 0%, #ffffff 100%);
+      margin: 0;
+      padding: 0;
+      transition: background 0.5s ease;
+      padding-top: 100px; /* لتعويض الرأس الثابت */
+    }
+    /* رأس الصفحة الرئيسي ثابت بتدرج ألوان حديث */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+      background: linear-gradient(135deg, #4b6cb7, #182848);
+      color: #fff;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    header h1 {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    header p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    /* الحاويات العامة للمحتوى */
+    .container-view {
+      margin-bottom: 100px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    /* زر مخصص مع تأثيرات hover ناعمة */
+    .btn-custom {
+      border-radius: 5px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-custom:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    /* تصميم اسم المدين في القائمة */
+    .debtor-name {
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+    .debtor-name:hover {
+      color: #0056b3;
+    }
+    /* تحسين مظهر الجداول */
+    table {
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+    table thead th {
+      background-color: #4b6cb7;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    table tbody tr {
+      background-color: #f9f9f9;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+    }
+    table tbody tr:hover {
+      background-color: #eaeaea;
+    }
+    table tbody td {
+      vertical-align: middle;
+      padding: 10px;
+      border: none;
+    }
+    /* تحسين حقل البحث */
+    #searchInput {
+      border-radius: 25px;
+      transition: box-shadow 0.3s ease;
+      border: 1px solid #ced4da;
+    }
+    #searchInput:focus {
+      box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+      border-color: #80bdff;
+    }
+    /* حاوية الإشعارات (Toast) مع تأثير ظهور وانحفاء */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1055;
+    }
+    .toast {
+      opacity: 0.95;
+      animation: fadeInOut 3s forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+    /* قسم تفاصيل المدين مع رأس ثابت */
+    .debtor-header {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      padding: 15px 20px;
+      border-bottom: 1px solid #ddd;
+      z-index: 1050;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .debtor-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #4b6cb7;
+    }
+    /* شريط المعلومات في أسفل الصفحة مع تدرج داكن */
+    #debtRatioBar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #182848, #4b6cb7);
+      color: #fff;
+      text-align: center;
+      padding: 12px;
+      font-size: 1.1rem;
+      box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+    /* زر الإضافة الثابت لإضافة مدين جديد (FAB) */
+    #fabAddDebtor {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 24px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1060;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease;
+    }
+    #fabAddDebtor:hover {
+      background: #218838;
+    }
+    /* زر الإضافة الثابت لإضافة معاملة جديدة (FAB) داخل صفحة المدين */
+    #fabAddTransaction {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 24px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      display: none; /* يظهر في صفحة تفاصيل المدين فقط */
+      align-items: center;
+      justify-content: center;
+      z-index: 1060;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease;
+    }
+    #fabAddTransaction:hover {
+      background: #218838;
+    }
+    /* تعديل مظهر النوافذ المنبثقة */
+    .modal-header {
+      border-bottom: none;
+    }
+    .modal-content {
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- رأس الصفحة الرئيسي -->
+  <header>
+    <h1>إدارة الديون الاحترافية</h1>
+    <p>تطبيق موحد لإدارة المدينين ومعاملاتهم</p>
+  </header>
+
+  <!-- المحتوى الرئيسي -->
+  <main class="container">
+    <!-- واجهة قائمة المدينين -->
+    <section id="listView" class="container-view">
+      <!-- أدوات التحكم: حقل البحث فقط -->
+      <div class="d-flex justify-content-end align-items-center mb-4">
+        <input type="text" id="searchInput" class="form-control w-50" placeholder="ابحث برقم المدين أو اسمه" aria-label="بحث">
+      </div>
+      <!-- جدول المدينين -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover" id="debtorsTable">
+          <thead>
+            <tr>
+              <th>رقم المدين</th>
+              <th>اسم المدين</th>
+              <th>إجمالي الدين</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- سيتم تعبئة الصفوف ديناميكيًا -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- واجهة تفاصيل المدين -->
+    <section id="detailsView" class="container-view" style="display:none; opacity:0;">
+      <!-- رأس ثابت لعرض اسم المدين -->
+      <div class="debtor-header">
+        <h2 id="debtorName"></h2>
+      </div>
+      <!-- بيانات المدين -->
+      <section id="debtorInfo" class="mt-3">
+        <p><span id="totalDebt"></span></p>
+      </section>
+      <!-- جدول المعاملات -->
+      <section id="transactionsSection" class="mb-4">
+        <div class="table-responsive">
+          <table class="table table-bordered" id="transactionsTable">
+            <thead class="table-dark">
+              <tr>
+                <th>التاريخ</th>
+                <th>المبلغ</th>
+                <th>الوصف</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- سيتم تعبئة المعاملات ديناميكيًا -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <!-- شريط المعلومات في أسفل الصفحة -->
+      <div id="debtRatioBar">
+        <span id="debtRatioText">إجمالي الدين: 0 ريال - عليه: 0 ريال - له: 0 ريال - ناتج الدين: 0 ريال</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- زر الإضافة الثابت لإضافة مدين جديد -->
+  <button id="fabAddDebtor" data-bs-toggle="modal" data-bs-target="#addDebtorModal">
+    <i class="fa-solid fa-user-plus"></i>
+  </button>
+
+  <!-- زر الإضافة الثابت لإضافة معاملة جديدة -->
+  <button id="fabAddTransaction" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <!-- النوافذ المنبثقة -->
+  <!-- نافذة إضافة/تعديل معاملة جديدة -->
+  <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="addTransactionModalLabel">
+            <i class="fa-solid fa-plus"></i> <span id="transactionModalTitle">إضافة</span> معاملة جديدة
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body">
+          <form id="transactionFormModal">
+            <div class="mb-3">
+              <label for="transactionAmountModal" class="form-label">المبلغ</label>
+              <input type="number" class="form-control" id="transactionAmountModal" placeholder="أدخل المبلغ بدون إشارة" required>
+            </div>
+            <div class="mb-3">
+              <label for="transactionTypeModal" class="form-label">نوع العملية</label>
+              <select id="transactionTypeModal" class="form-select" required>
+                <option value="عليه">عليه</option>
+                <option value="له">له</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="transactionDescModal" class="form-label">الوصف</label>
+              <textarea class="form-control" id="transactionDescModal" rows="2" placeholder="مثلاً: دين مبدئي، سداد جزئي..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="transactionDateModal" class="form-label">التاريخ</label>
+              <input type="date" class="form-control" id="transactionDateModal" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-custom w-100">
+              <i class="fa-solid fa-check"></i> حفظ المعاملة
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة إضافة مدين جديد -->
+  <div class="modal fade" id="addDebtorModal" tabindex="-1" aria-labelledby="addDebtorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header bg-primary text-white">
+           <h5 class="modal-title" id="addDebtorModalLabel">
+             <i class="fa-solid fa-user-plus"></i> إضافة مدين جديد
+           </h5>
+           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+         </div>
+         <div class="modal-body">
+           <!-- زر استيراد جهة اتصال -->
+           <div class="mb-3">
+             <button type="button" class="btn btn-info w-100 btn-custom" id="importContactBtn">
+               <i class="fa-solid fa-address-book"></i> إضافة من جهات الاتصال
+             </button>
+           </div>
+           <hr>
+           <!-- نموذج الإدخال اليدوي -->
+           <form id="addDebtorForm">
+             <div class="mb-3">
+               <label for="debtorId" class="form-label">رقم المدين</label>
+               <input type="text" class="form-control" id="debtorId" readonly required>
+             </div>
+             <div class="mb-3">
+               <label for="debtorNameInput" class="form-label">اسم المدين</label>
+               <input type="text" class="form-control" id="debtorNameInput" placeholder="أدخل اسم المدين" required>
+             </div>
+             <button type="submit" class="btn btn-success btn-custom w-100">
+               <i class="fa-solid fa-check"></i> حفظ
+             </button>
+           </form>
+         </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- حاوية الإشعارات -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- سكريبتات Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- السكريبت الرئيسي -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // استرجاع بيانات المدينين من localStorage أو استخدام بيانات افتراضية
+      let debtors = JSON.parse(localStorage.getItem("debtors")) || [
+        {
+          id: "001",
+          debtorName: "مثال1",
+          transactions: [
+            { amount: 500, date: "2025-01-01", description: "دين مبدئي" },
+            { amount: -200, date: "2025-01-05", description: "سداد جزئي" }
+          ]
+        },
+        {
+          id: "002",
+          debtorName: "مثال 2",
+          transactions: [
+            { amount: 300, date: "2025-02-10", description: "دين مبدئي" }
+          ]
+        }
+      ];
+      
+      let currentDebtor = null; // لتخزين بيانات المدين المحدد
+      let transactionEditIndex = -1; // مؤشر لتحديد وضع التعديل (-1 يعني إضافة جديدة)
+
+      // حفظ البيانات في localStorage
+      const saveData = () => {
+        localStorage.setItem("debtors", JSON.stringify(debtors));
+      };
+
+      // دالة عرض الإشعارات (Toast)
+      const showToast = (message, type = "success") => {
+        const toastEl = document.createElement("div");
+        toastEl.className = toast align-items-center text-bg-${type} border-0 show`;
+        toastEl.style.minWidth = "250px";
+        toastEl.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="إغلاق"></button>
+          </div>`;
+        document.getElementById("toastContainer").appendChild(toastEl);
+        setTimeout(() => {
+          toastEl.classList.remove("show");
+          toastEl.remove();
+        }, 3000);
+      };
+
+      // توليد رقم مدين جديد تلقائيًا
+      const generateDebtorId = () => {
+        const maxId = debtors.reduce((max, debtor) => Math.max(max, parseInt(debtor.id, 10)), 0);
+        return (maxId + 1).toString().padStart(3, "0");
+      };
+
+      // حساب إجمالي الدين (المجموع الكلي)
+      const calculateTotalDebt = (transactions) =>
+        transactions.reduce((sum, txn) => sum + txn.amount, 0);
+
+      // دالة لحساب المبالغ "عليه" و"له" والناتج الصافي
+      const updateDebtTotals = () => {
+        let owed = currentDebtor.transactions
+          .filter(txn => txn.amount > 0)
+          .reduce((sum, txn) => sum + txn.amount, 0);
+        let due = currentDebtor.transactions
+          .filter(txn => txn.amount < 0)
+          .reduce((sum, txn) => sum + Math.abs(txn.amount), 0);
+        let net = owed - due;
+        let netColor = net > 0 ? "red" : net < 0 ? "blue" : "green";
+        document.getElementById("debtRatioBar").innerHTML = 
+          `<span style="color:red;">عليه: ${owed} ريال</span> | 
+           <span style="color:blue;">له: ${due} ريال</span> | 
+           <span style="color:${netColor};">ناتج الدين: ${net} ريال</span>`;
+      };
+
+      // عرض قائمة المدينين في الجدول
+      const renderDebtorsTable = () => {
+        const tbody = document.querySelector("#debtorsTable tbody");
+        tbody.innerHTML = "";
+        debtors.forEach((debtor) => {
+          const total = calculateTotalDebt(debtor.transactions);
+          const status = total > 0 ? "غير مسدد" : "مسدد";
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${debtor.id}</td>
+            <td><span class="debtor-name" data-id="${debtor.id}">${debtor.debtorName}</span></td>
+            <td>${total} ريال</td>
+            <td>${status}</td>
+            <td>
+              <i class="fa-solid fa-edit text-warning me-2" style="cursor:pointer;" title="تعديل المدين" data-id="${debtor.id}" data-action="edit"></i>
+              <i class="fa-solid fa-trash text-danger" style="cursor:pointer;" title="حذف المدين" data-id="${debtor.id}" data-action="delete"></i>
+            </td>`;
+          tbody.appendChild(row);
+        });
+      };
+
+      // فتح صفحة تفاصيل المدين وعرضها مع إخفاء زر إضافة مدين وإظهار زر إضافة معاملة
+      const showDetailsView = (debtorId) => {
+        currentDebtor = debtors.find(d => d.id === debtorId);
+        if (!currentDebtor) {
+          showToast("لم يتم العثور على بيانات المدين!", "danger");
+          return;
+        }
+        document.getElementById("debtorName").textContent = currentDebtor.debtorName;
+        document.getElementById("totalDebt").textContent = calculateTotalDebt(currentDebtor.transactions);
+        renderTransactions();
+        document.getElementById("listView").style.display = "none";
+        document.getElementById("detailsView").style.display = "block";
+        setTimeout(() => document.getElementById("detailsView").style.opacity = 1, 50);
+        document.getElementById("fabAddDebtor").style.display = "none";
+        document.getElementById("fabAddTransaction").style.display = "flex";
+      };
+
+      // العودة إلى قائمة المدينين
+      const showListView = () => {
+        currentDebtor = null;
+        document.getElementById("detailsView").style.opacity = 0;
+        setTimeout(() => {
+          document.getElementById("detailsView").style.display = "none";
+          document.getElementById("listView").style.display = "block";
+          renderDebtorsTable();
+        }, 500);
+        document.getElementById("fabAddDebtor").style.display = "flex";
+        document.getElementById("fabAddTransaction").style.display = "none";
+      };
+
+      // عرض معاملات المدين وتحديث شريط النتائج
+      const renderTransactions = () => {
+        const tbody = document.querySelector("#transactionsTable tbody");
+        tbody.innerHTML = "";
+        currentDebtor.transactions.forEach((txn, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${txn.date}</td>
+            <td>${txn.amount} ريال</td>
+            <td>${txn.description || ""}</td>
+            <td>
+              <i class="fa-solid fa-edit text-warning me-2 edit-transaction" style="cursor:pointer;" title="تعديل المعاملة" data-index="${index}"></i>
+              <i class="fa-solid fa-trash text-danger delete-transaction" style="cursor:pointer;" title="حذف المعاملة" data-index="${index}"></i>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        const total = calculateTotalDebt(currentDebtor.transactions);
+        document.getElementById("totalDebt").textContent = total;
+        updateDebtTotals();
+      };
+
+      // التعامل مع النقر على صف المدين (باستثناء النقر على الأيقونات)
+      document.querySelector("#debtorsTable tbody").addEventListener("click", (e) => {
+        if (e.target.tagName.toLowerCase() === "i") return;
+        const row = e.target.closest("tr");
+        if (!row) return;
+        const debtorNameSpan = row.querySelector(".debtor-name");
+        if (!debtorNameSpan) return;
+        const debtorId = debtorNameSpan.getAttribute("data-id");
+        if (debtorId) {
+          showDetailsView(debtorId);
+        }
+      });
+
+      // التعامل مع النقر على أيقونات تعديل وحذف المدين داخل الجدول
+      document.querySelector("#debtorsTable tbody").addEventListener("click", (e) => {
+        const target = e.target;
+        const debtorId = target.getAttribute("data-id");
+        const action = target.getAttribute("data-action");
+        if (action === "edit" && debtorId) {
+          showToast("خاصية تعديل بيانات المدين غير متوفرة في هذا المثال", "info");
+        }
+        if (action === "delete" && debtorId) {
+          if (confirm("هل أنت متأكد من حذف هذا المدين؟")) {
+            debtors = debtors.filter(debtor => debtor.id !== debtorId);
+            saveData();
+            renderDebtorsTable();
+            showToast("تم حذف المدين!", "danger");
+          }
+        }
+      });
+
+      // التعامل مع النقر على أيقونات تعديل وحذف المعاملة داخل جدول المعاملات
+      document.querySelector("#transactionsTable tbody").addEventListener("click", (e) => {
+        const target = e.target;
+        const index = target.getAttribute("data-index");
+        if (target.classList.contains("edit-transaction")) {
+          transactionEditIndex = parseInt(index);
+          const txn = currentDebtor.transactions[transactionEditIndex];
+          document.getElementById("transactionAmountModal").value = Math.abs(txn.amount);
+          document.getElementById("transactionTypeModal").value = txn.amount < 0 ? "له" : "عليه";
+          document.getElementById("transactionDescModal").value = txn.description || "";
+          document.getElementById("transactionDateModal").value = txn.date;
+          document.getElementById("transactionModalTitle").textContent = "تعديل";
+          const transactionModal = new bootstrap.Modal(document.getElementById("addTransactionModal"));
+          transactionModal.show();
+        }
+        if (target.classList.contains("delete-transaction")) {
+          if (confirm("هل أنت متأكد من حذف هذه المعاملة؟")) {
+            const delIndex = parseInt(index);
+            currentDebtor.transactions.splice(delIndex, 1);
+            saveData();
+            renderTransactions();
+            showToast("تم حذف المعاملة!", "danger");
+          }
+        }
+      });
+
+      // خاصية البحث في قائمة المدينين
+      document.getElementById("searchInput").addEventListener("keyup", function() {
+        const query = this.value.toLowerCase();
+        const tbody = document.querySelector("#debtorsTable tbody");
+        tbody.innerHTML = "";
+        debtors.forEach(debtor => {
+          if (debtor.id.toLowerCase().includes(query) || debtor.debtorName.toLowerCase().includes(query)) {
+            const total = calculateTotalDebt(debtor.transactions);
+            const status = total > 0 ? "غير مسدد" : "مسدد";
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${debtor.id}</td>
+              <td><span class="debtor-name" data-id="${debtor.id}">${debtor.debtorName}</span></td>
+              <td>${total} ريال</td>
+              <td>${status}</td>
+              <td>
+                <i class="fa-solid fa-edit text-warning me-2" style="cursor:pointer;" title="تعديل المدين" data-id="${debtor.id}" data-action="edit"></i>
+                <i class="fa-solid fa-trash text-danger" style="cursor:pointer;" title="حذف المدين" data-id="${debtor.id}" data-action="delete"></i>
+              </td>`;
+            tbody.appendChild(row);
+          }
+        });
+      });
+
+      // زر الرجوع من واجهة التفاصيل عبر شريط المعلومات السفلي
+      document.getElementById("debtRatioBar").addEventListener("click", showListView);
+
+      // عند فتح نافذة إضافة/تعديل معاملة جديدة، تعبئة التاريخ الحالي تلقائيًا إذا كانت عملية إضافة جديدة
+      document.getElementById("fabAddTransaction").addEventListener("click", () => {
+        transactionEditIndex = -1;
+        document.getElementById("transactionFormModal").reset();
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("transactionDateModal").value = today;
+        document.getElementById("transactionModalTitle").textContent = "إضافة";
+      });
+
+      // التعامل مع نموذج إضافة/تعديل معاملة جديدة
+      document.getElementById("transactionFormModal").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const type = document.getElementById("transactionTypeModal").value;
+        const date = document.getElementById("transactionDateModal").value;
+        let amount = parseFloat(document.getElementById("transactionAmountModal").value);
+        const description = document.getElementById("transactionDescModal").value;
+        if (date && !isNaN(amount)) {
+          amount = type === "له" ? -Math.abs(amount) : Math.abs(amount);
+          if (transactionEditIndex !== -1) {
+            currentDebtor.transactions[transactionEditIndex] = { amount, date, description };
+            transactionEditIndex = -1;
+            showToast("تم تعديل المعاملة بنجاح!", "success");
+          } else {
+            currentDebtor.transactions.push({ amount, date, description });
+            showToast("تم إضافة المعاملة بنجاح!", "success");
+          }
+          saveData();
+          renderTransactions();
+          const transactionModal = bootstrap.Modal.getInstance(document.getElementById("addTransactionModal"));
+          transactionModal.hide();
+        } else {
+          showToast("يرجى تعبئة البيانات المطلوبة بشكل صحيح!", "danger");
+        }
+      });
+
+      // التعامل مع زر استيراد جهة اتصال في نموذج إضافة مدين جديد
+      document.getElementById("importContactBtn").addEventListener("click", async () => {
+        if (navigator.contacts && navigator.contacts.select) {
+          try {
+            const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+            if (contacts.length > 0) {
+              const contact = contacts[0];
+              const name = Array.isArray(contact.name) ? contact.name.join(" ") : contact.name;
+              document.getElementById("debtorNameInput").value = name || "";
+              showToast("تم استيراد جهة الاتصال بنجاح!", "success");
+            }
+          } catch (err) {
+            console.error("خطأ في استيراد جهة الاتصال:", err);
+            showToast("حدث خطأ أثناء استيراد جهة الاتصال!", "danger");
+          }
+        } else {
+          alert("ميزة استيراد جهات الاتصال غير مدعومة في هذا المتصفح. الرجاء الإدخال اليدوي.");
+        }
+      });
+
+      // عند فتح نافذة إضافة مدين جديد، توليد رقم مدين تلقائيًا
+      document.getElementById("addDebtorModal").addEventListener("show.bs.modal", () => {
+        document.getElementById("debtorId").value = generateDebtorId();
+      });
+
+      // التعامل مع نموذج إضافة مدين جديد
+      document.getElementById("addDebtorForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const id = document.getElementById("debtorId").value;
+        const name = document.getElementById("debtorNameInput").value.trim();
+        if (name) {
+          debtors.push({ id, debtorName: name, transactions: [] });
+          saveData();
+          renderDebtorsTable();
+          showToast("تم إضافة المدين بنجاح!");
+          e.target.reset();
+          bootstrap.Modal.getInstance(document.getElementById("addDebtorModal")).hide();
+        }
+      });
+
+      // عند تحميل الصفحة، عرض قائمة المدينين
+      renderDebtorsTable();
+    });
+  </script>
+</body>
+</html>
