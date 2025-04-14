@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts (Cairo) -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <!-- مكتبة QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -63,7 +65,6 @@
     <h1>إدارة المخازن المتقدمة</h1>
     <p>لوحة تحكم متكاملة لإدارة المخزون</p>
   </div>
-
   <!-- شريط التحكم والبحث -->
   <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -80,19 +81,17 @@
       </div>
     </div>
   </div>
-
-  <!-- أزرار طباعة ومشاركة جرد المخزون -->
+  <!-- أزرار طباعة ومشاركة الفاتورة -->
   <div class="container my-4">
     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
       <button class="btn btn-secondary" onclick="printInventory()">
         <i class="fa-solid fa-print"></i> طباعة الجرد
       </button>
       <button class="btn btn-info text-white" onclick="shareInventory()">
-        <i class="fa-solid fa-share"></i> مشاركة الجرد
+        <i class="fa-solid fa-share"></i> مشاركة الجرد كنص
       </button>
     </div>
   </div>
-
   <!-- جدول المخزون -->
   <div class="container table-container">
     <div class="table-responsive">
@@ -112,10 +111,8 @@
       </table>
     </div>
   </div>
-
   <!-- Toast لإظهار الإشعارات -->
   <div class="toast-container" id="toastContainer"></div>
-
   <!-- نافذة منبثقة لإضافة منتج جديد (واجهة محسنة) -->
   <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -148,7 +145,6 @@
       </div>
     </div>
   </div>
-
   <!-- نافذة منبثقة لتعديل المنتج -->
   <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -182,7 +178,6 @@
       </div>
     </div>
   </div>
-
   <!-- نافذة تأكيد حذف المنتج -->
   <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -201,48 +196,53 @@
       </div>
     </div>
   </div>
-
-  <!-- نافذة مشاركة جرد المخزون (في حال عدم دعم Web Share API) -->
+  <!-- نافذة مشاركة جرد المخزون كنص -->
   <div class="modal fade" id="customShareModal" tabindex="-1" aria-labelledby="customShareModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
          <div class="modal-header">
            <h5 class="modal-title" id="customShareModalLabel">مشاركة جرد المخزون</h5>
            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
          </div>
-         <div class="modal-body text-center">
-           <p>اختر طريقة المشاركة:</p>
-           <div class="d-flex flex-wrap justify-content-around gap-2">
-             <a href="#" target="_blank" id="twitterShare" class="btn btn-primary">
-               <i class="fab fa-twitter"></i> تويتر
-             </a>
-             <a href="#" target="_blank" id="whatsappShare" class="btn btn-success">
-               <i class="fab fa-whatsapp"></i> واتساب
-             </a>
-             <a href="#" target="_blank" id="emailShare" class="btn btn-info text-white">
-               <i class="fa fa-envelope"></i> بريد إلكتروني
-             </a>
-             <a href="#" target="_blank" id="bluetoothShare" class="btn btn-dark">
-               <i class="fa fa-bluetooth"></i> بلوتوث
-             </a>
-             <button class="btn btn-secondary" id="copyShare">
-               <i class="fa fa-copy"></i> نسخ
+         <div class="modal-body">
+           <div class="form-group mb-3">
+             <label for="shareText">النص المراد مشاركته:</label>
+             <textarea class="form-control" id="shareText" rows="10" readonly></textarea>
+           </div>
+           <div class="d-flex justify-content-center gap-3">
+             <button class="btn btn-success" onclick="copyShareText()">
+               <i class="fa fa-copy"></i> نسخ النص
+             </button>
+             <button class="btn btn-primary" onclick="shareViaWeb()">
+               <i class="fa-solid fa-share"></i> مشاركة مباشرة
              </button>
            </div>
          </div>
       </div>
     </div>
   </div>
-
+  <!-- نافذة QR Code -->
+  <div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header custom-header">
+          <h5 class="modal-title" id="qrCodeModalLabel">رمز الاستجابة السريعة</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="qrCodeContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- سكريبتات Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
   <!-- سكريبت JavaScript لإدارة المخازن -->
   <script>
     // دالة لاسترجاع المنتجات من localStorage أو استخدام بيانات افتراضية
     function getProducts() {
       const stored = localStorage.getItem("inventoryProducts");
-      if(stored) {
+      if (stored) {
         return JSON.parse(stored);
       }
       return [
@@ -250,26 +250,22 @@
         { id: "002", name: "منتج ب", quantity: 30, price: "150 ريال" }
       ];
     }
-
     // دالة لتحديث بيانات المخزون في localStorage
     function updateLocalStorageProducts() {
       localStorage.setItem("inventoryProducts", JSON.stringify(products));
     }
-
     let products = getProducts();
     let currentDeleteIndex = null;
     const inventoryTableBody = document.querySelector("#inventoryTable tbody");
     const totalProductsBadge = document.getElementById("totalProductsBadge");
-
     function generateProductId() {
       let max = 0;
       products.forEach(product => {
         const num = parseInt(product.id, 10);
-        if(num > max) max = num;
+        if (num > max) max = num;
       });
       return (max + 1).toString().padStart(3, "0");
     }
-
     function renderTable(data = products) {
       inventoryTableBody.innerHTML = "";
       data.forEach((product, index) => {
@@ -282,13 +278,13 @@
           <td class="action-buttons">
             <i class="fa-solid fa-edit text-warning" title="تعديل" onclick="editProduct(${index})"></i>
             <i class="fa-solid fa-trash text-danger" title="حذف" onclick="deleteProduct(${index})"></i>
+            <i class="fa-solid fa-qrcode text-info" title="عرض QR Code" onclick="showQRCode('${product.id}', '${product.name}', '${product.quantity}', '${product.price}')"></i>
           </td>
         `;
         inventoryTableBody.appendChild(tr);
       });
       totalProductsBadge.textContent = "المنتجات: " + products.length;
     }
-
     function showToast(message, type = "success") {
       const toastEl = document.createElement("div");
       toastEl.className = `toast align-items-center text-bg-${type} border-0 show`;
@@ -305,7 +301,6 @@
         toastEl.remove();
       }, 3000);
     }
-
     document.getElementById("searchInput").addEventListener("keyup", function() {
       const filter = this.value.toLowerCase();
       const filteredProducts = products.filter(product =>
@@ -314,11 +309,9 @@
       );
       renderTable(filteredProducts);
     });
-
     document.getElementById("addProductModal").addEventListener("show.bs.modal", function() {
       document.getElementById("productId").value = generateProductId();
     });
-
     document.getElementById("addProductForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const id = document.getElementById("productId").value.trim();
@@ -332,7 +325,6 @@
       this.reset();
       bootstrap.Modal.getInstance(document.getElementById("addProductModal")).hide();
     });
-
     function editProduct(index) {
       const product = products[index];
       document.getElementById("editIndex").value = index;
@@ -342,7 +334,6 @@
       document.getElementById("editProductPrice").value = product.price;
       new bootstrap.Modal(document.getElementById("editProductModal")).show();
     }
-
     document.getElementById("editProductForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const index = document.getElementById("editIndex").value;
@@ -357,12 +348,10 @@
       showToast("تم تحديث بيانات المنتج!", "info");
       bootstrap.Modal.getInstance(document.getElementById("editProductModal")).hide();
     });
-
     function deleteProduct(index) {
       currentDeleteIndex = index;
       new bootstrap.Modal(document.getElementById("deleteConfirmModal")).show();
     }
-
     document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
       products.splice(currentDeleteIndex, 1);
       updateLocalStorageProducts();
@@ -370,7 +359,6 @@
       showToast("تم حذف المنتج!", "danger");
       bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal")).hide();
     });
-
     document.querySelectorAll("th.sortable").forEach(th => {
       th.addEventListener("click", function() {
         const sortKey = this.getAttribute("data-sort");
@@ -382,7 +370,6 @@
         renderTable();
       });
     });
-
     function printInventory() {
       let printContent = `
       <html>
@@ -429,31 +416,75 @@
       printWindow.print();
       printWindow.close();
     }
-
+    // دالة مشاركة الجرد كنص منظم
     function shareInventory() {
-      let inventoryText = "جرد المخزون:\n";
-      products.forEach(product => {
-        inventoryText += `رقم المنتج: ${product.id}, اسم المنتج: ${product.name}, الكمية: ${product.quantity}, السعر: ${product.price}\n`;
-      });
-      const encodedText = encodeURIComponent(inventoryText);
-      if (navigator.share) {
+      const formattedText = formatInventoryText();
+      
+      if (navigator.canShare && navigator.canShare({ text: formattedText })) {
         navigator.share({
           title: 'جرد المخزون',
-          text: inventoryText
-        }).then(() => {
-          showToast("تم مشاركة الجرد بنجاح!");
-        }).catch(err => {
-          showToast("فشل مشاركة الجرد!", "danger");
-        });
+          text: formattedText,
+        }).then(() => showToast("تمت المشاركة بنجاح!"))
+          .catch(() => showToast("فشل في المشاركة", "danger"));
       } else {
-        document.getElementById("twitterShare").href = "https://twitter.com/intent/tweet?text=" + encodedText;
-        document.getElementById("whatsappShare").href = "https://api.whatsapp.com/send?text=" + encodedText;
-        document.getElementById("emailShare").href = "mailto:?subject=" + encodeURIComponent("جرد المخزون") + "&body=" + encodedText;
-        document.getElementById("bluetoothShare").href = "intent://send/#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=" + encodedText + ";end;";
-        new bootstrap.Modal(document.getElementById("customShareModal")).show();
+        document.getElementById('shareText').value = formattedText;
+        new bootstrap.Modal(document.getElementById('customShareModal')).show();
       }
     }
 
+    // دالة تنسيق نص الجرد
+    function formatInventoryText() {
+      let text = "ــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ\n";
+      text += "          جرد المخزون - التاريخ: " + new Date().toLocaleDateString("ar-EG") + "\n";
+      text += "ــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ\n\n";
+      text += "المنتجات:\n";
+      products.forEach(product => {
+        text += `رقم: ${product.id}\n`;
+        text += `اسم: ${product.name}\n`;
+        text += `الكمية: ${product.quantity}\n`;
+        text += `السعر: ${product.price}\n`;
+        text += "---------------------\n";
+      });
+      text += `\nإجمالي المنتجات: ${products.length}\n`;
+      text += "ــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــــ";
+      return text;
+    }
+
+    // دالة نسخ النص إلى الحافظة
+    function copyShareText() {
+      const textArea = document.getElementById('shareText');
+      textArea.select();
+      document.execCommand('copy');
+      showToast("تم النسخ إلى الحافظة!");
+    }
+
+    // دالة مشاركة عبر Web Share API
+    function shareViaWeb() {
+      const text = document.getElementById('shareText').value;
+      if (navigator.canShare) {
+        navigator.share({ text })
+          .then(() => showToast("تمت المشاركة بنجاح!"))
+          .catch(() => showToast("فشل في المشاركة", "danger"));
+      }
+    }
+    // دالة توليد وعرض QR Code
+    function showQRCode(id, name, quantity, price) {
+      const qrContent = `رقم المنتج: ${id}
+اسم المنتج: ${name}
+الكمية: ${quantity}
+السعر: ${price}`;
+      const qrContainer = document.getElementById("qrCodeContainer");
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: qrContent,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      new bootstrap.Modal(document.getElementById("qrCodeModal")).show();
+    }
     window.addEventListener("DOMContentLoaded", () => {
       renderTable();
     });

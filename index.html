@@ -72,6 +72,12 @@
           <input class="form-control me-2 search-input" type="search" placeholder="بحث..." aria-label="بحث">
         </form>
         <ul class="navbar-nav ms-auto">
+          <!-- زر تسجيل الدخول -->
+          <li class="nav-item me-3">
+            <a class="nav-link" href="login.html">
+              <i class="fa-solid fa-right-to-bracket me-1"></i> تسجيل الدخول
+            </a>
+          </li>
           <!-- أيقونة التنبيهات -->
           <li class="nav-item me-3">
             <a class="nav-link position-relative" href="#">
@@ -212,7 +218,6 @@
     // تبديل الوضع (Dark Mode)
     document.getElementById("darkModeToggle").addEventListener("click", function() {
       document.body.classList.toggle("dark-mode");
-      // تبديل الأيقونة بين القمر والشمس
       const icon = this.querySelector("i");
       if(document.body.classList.contains("dark-mode")) {
         icon.classList.replace("fa-moon", "fa-sun");
@@ -223,7 +228,6 @@
     
     // تفاعل عملية النسخ الاحتياطي
     document.getElementById("confirmBackup").addEventListener("click", function() {
-      // هنا يمكنك إضافة كود العملية الفعلية
       alert("تم إنشاء نسخة احتياطية بنجاح!");
       var backupModal = bootstrap.Modal.getInstance(document.getElementById('backupModal'));
       backupModal.hide();
@@ -231,7 +235,6 @@
     
     // تفاعل عملية الاستعادة
     document.getElementById("confirmRestore").addEventListener("click", function() {
-      // هنا يمكنك إضافة كود عملية الاستعادة
       alert("تم استعادة النسخة الاحتياطية بنجاح!");
       var restoreModal = bootstrap.Modal.getInstance(document.getElementById('restoreModal'));
       restoreModal.hide();
