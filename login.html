@@ -1,19 +1,21 @@
+<!-- public/login.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>تسجيل الدخول - حسابي</title>
-  <script src="https://kit.fontawesome.com/كود-خاص-بك.js" crossorigin="anonymous"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- استدعاء مكتبة FontAwesome (تأكد من استبدال your_actual_kit_code برمزك الصحيح) -->
+  <script src="https://kit.fontawesome.com/your_actual_kit_code.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* تنسيق CSS للصفحة */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: 'Tajawal', sans-serif;
     }
-
     body {
       background: linear-gradient(135deg, #ece9e6 0%, #ffffff 100%);
       min-height: 100vh;
@@ -23,12 +25,11 @@
       direction: rtl;
       padding: 1rem;
     }
-
     .container {
       position: relative;
       width: 100%;
       max-width: 420px;
-      background: #ffffff;
+      background: #fff;
       border-radius: 18px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
       border: 1px solid rgba(255, 255, 255, 0.3);
@@ -36,12 +37,10 @@
       padding: 2.5rem;
       transition: transform 0.3s ease;
     }
-
     .container:hover {
       transform: translateY(-5px);
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
     }
-
     .header-bar {
       background: linear-gradient(90deg, #6c63ff 0%, #584fbf 100%);
       height: 8px;
@@ -50,7 +49,6 @@
       margin-bottom: 2rem;
       position: relative;
     }
-
     .header-bar::before {
       content: '';
       position: absolute;
@@ -59,12 +57,10 @@
       background: linear-gradient(transparent 25%, rgba(255,255,255,0.3), transparent 75%);
       animation: shine 2s infinite;
     }
-
     @keyframes shine {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100%); }
     }
-
     .login-box h2 {
       color: #333;
       font-size: 1.8rem;
@@ -72,21 +68,18 @@
       margin-bottom: 0.5rem;
       text-align: center;
     }
-
     .login-box p {
       color: #666;
       font-size: 0.9rem;
       margin-bottom: 2rem;
       text-align: center;
     }
-
     .social-login {
       display: flex;
       flex-direction: column;
       gap: 1rem;
       margin-bottom: 2rem;
     }
-
     .social-login button {
       border: none;
       padding: 0.8rem;
@@ -99,27 +92,22 @@
       justify-content: center;
       gap: 0.5rem;
     }
-
     .google-btn {
       background: #f5f5f5;
       color: #333;
     }
-
     .google-btn:hover {
       background: #e0e0e0;
       transform: scale(1.05);
     }
-
     .facebook-btn {
       background: #3b5998;
       color: #fff;
     }
-
     .facebook-btn:hover {
       background: #30497a;
       transform: scale(1.05);
     }
-
     .separator {
       display: flex;
       align-items: center;
@@ -127,7 +115,6 @@
       margin: 1.5rem 0;
       position: relative;
     }
-
     .separator span {
       background: #fff;
       padding: 0 1rem;
@@ -135,7 +122,6 @@
       color: #999;
       font-weight: 600;
     }
-
     .separator::before {
       content: "";
       position: absolute;
@@ -146,12 +132,10 @@
       left: 0;
       z-index: 0;
     }
-
     .input-group {
       position: relative;
       margin-bottom: 1.2rem;
     }
-
     .input-group input {
       width: 100%;
       padding: 0.8rem 3rem 0.8rem 1rem;
@@ -161,12 +145,10 @@
       font-size: 0.9rem;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
-
     .input-group input:focus {
       border-color: #6c63ff;
       box-shadow: 0 0 8px rgba(108, 99, 255, 0.2);
     }
-
     .input-icon {
       position: absolute;
       top: 50%;
@@ -175,7 +157,6 @@
       color: #6c63ff;
       font-size: 1rem;
     }
-
     .toggle-password {
       position: absolute;
       top: 50%;
@@ -187,7 +168,6 @@
       color: #aaa;
       font-size: 1rem;
     }
-
     .remember-forgot {
       display: flex;
       justify-content: space-between;
@@ -195,24 +175,20 @@
       margin-bottom: 1.5rem;
       font-size: 0.9rem;
     }
-
     .remember-forgot label {
       display: flex;
       align-items: center;
       gap: 0.3rem;
       color: #555;
     }
-
     .remember-forgot a {
       color: #6c63ff;
       text-decoration: none;
       font-weight: 600;
     }
-
     .remember-forgot a:hover {
       text-decoration: underline;
     }
-
     .login-btn {
       width: 100%;
       padding: 0.9rem;
@@ -224,28 +200,23 @@
       cursor: pointer;
       transition: background 0.3s, transform 0.3s;
     }
-
     .login-btn:hover {
       background: #584fbf;
       transform: scale(1.05);
     }
-
     .register {
       text-align: center;
       margin-top: 1.5rem;
       font-size: 0.9rem;
     }
-
     .register a {
       color: #6c63ff;
       font-weight: 600;
       text-decoration: none;
     }
-
     .register a:hover {
       text-decoration: underline;
     }
-
     @media (max-width: 480px) {
       .container {
         padding: 1.5rem;
@@ -256,24 +227,19 @@
 <body>
   <div class="container">
     <div class="header-bar"></div>
-    
     <div class="login-box">
       <h2>تسجيل الدخول</h2>
       <p>أدخل بيانات حسابك للوصول إلى النظام</p>
-      
       <div class="social-login">
         <button class="google-btn"><i class="fab fa-google"></i> الدخول عبر جوجل</button>
         <button class="facebook-btn"><i class="fab fa-facebook-f"></i> الدخول عبر فيسبوك</button>
       </div>
-      
       <div class="separator"><span>أو</span></div>
-      
       <form id="loginForm">
         <div class="input-group">
           <input type="email" id="email" placeholder="البريد الإلكتروني *" required>
           <span class="input-icon"><i class="fas fa-envelope"></i></span>
         </div>
-        
         <div class="input-group password-field">
           <input type="password" id="password" placeholder="كلمة المرور *" required>
           <span class="input-icon"><i class="fas fa-lock"></i></span>
@@ -281,50 +247,34 @@
             <i id="eyeIcon" class="fas fa-eye"></i>
           </button>
         </div>
-        
         <div class="remember-forgot">
           <label class="remember-me">
             <input type="checkbox"> تذكرني
           </label>
           <a href="#" onclick="forgotPassword()">نسيت كلمة المرور؟</a>
         </div>
-        
         <button type="submit" class="login-btn">دخول الحساب</button>
       </form>
-      
       <div class="register">
         <p>ليس لديك حساب؟ <a href="register.html">سجل الآن</a></p>
       </div>
     </div>
   </div>
-
-  <!-- Firebase SDK -->
+  <!-- استدعاء مكتبات Firebase (نموذج compat للإصدارات السابقة لاستعمال الأكواد القديمة إن لزم) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <!-- استيراد ملف إعدادات Firebase باستخدام ES Module -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module">
+    // يمكنك استيراد ملف الإعدادات إذا كنت تريد استخدام الخدمات هنا
+    import { app } from "./firebase-config.js";
 
-  <script>
-    // تهيئة Firebase مع بيانات مشروعك الحقيقية
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlqyiMbX9XR3v8gm_uoUvnUYT8qiW9D2U",
-      authDomain: "almhasb-almhtref.firebaseapp.com",
-      projectId: "almhasb-almhtref",
-      storageBucket: "almhasb-almhtref.firebasestorage.app",
-      messagingSenderId: "584738127950",
-      appId: "1:584738127950:web:e3075006520460fe0b831f",
-      measurementId: "G-KMVE0R5G5Q"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // دالة تسجيل الدخول
+    // دالة تسجيل الدخول عبر البريد الإلكتروني
     async function handleLogin(email, password) {
       try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+        const { auth } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js");
+        await firebase.auth().signInWithEmailAndPassword(email, password);
         window.location.href = "dashboard.html";
       } catch (error) {
         alert(`حدث خطأ: ${error.message}`);
@@ -332,16 +282,14 @@
     }
 
     // تسجيل الدخول عبر Google
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
     document.querySelector('.google-btn').addEventListener('click', async () => {
       try {
-        const result = await auth.signInWithPopup(googleProvider);
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(googleProvider);
         const user = result.user;
-        const userRef = db.collection("users").doc(user.uid);
-        
-        // إنشاء مستند المستخدم إذا لم يكن موجودًا
-        const doc = await userRef.get();
-        if (!doc.exists) {
+        const userRef = firebase.firestore().collection("users").doc(user.uid);
+        const docSnapshot = await userRef.get();
+        if (!docSnapshot.exists) {
           await userRef.set({
             name: user.displayName,
             email: user.email,
@@ -356,16 +304,14 @@
     });
 
     // تسجيل الدخول عبر Facebook
-    const facebookProvider = new firebase.auth.FacebookAuthProvider();
     document.querySelector('.facebook-btn').addEventListener('click', async () => {
       try {
-        const result = await auth.signInWithPopup(facebookProvider);
+        const facebookProvider = new firebase.auth.FacebookAuthProvider();
+        const result = await firebase.auth().signInWithPopup(facebookProvider);
         const user = result.user;
-        const userRef = db.collection("users").doc(user.uid);
-        
-        // إنشاء مستند المستخدم إذا لم يكن موجودًا
-        const doc = await userRef.get();
-        if (!doc.exists) {
+        const userRef = firebase.firestore().collection("users").doc(user.uid);
+        const docSnapshot = await userRef.get();
+        if (!docSnapshot.exists) {
           await userRef.set({
             name: user.displayName,
             email: user.email,
@@ -379,21 +325,19 @@
       }
     });
 
-    // معالجة إرسال النموذج
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    // معالجة نموذج تسجيل الدخول
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
       if (password.length < 8) {
         alert("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
         return;
       }
-      
       handleLogin(email, password);
     });
 
-    // إظهار/إخفاء كلمة المرور
+    // دالة لإظهار وإخفاء كلمة المرور
     function togglePasswordVisibility() {
       const passwordInput = document.getElementById("password");
       const eyeIcon = document.getElementById("eyeIcon");
@@ -406,12 +350,12 @@
       }
     }
 
-    // نسيت كلمة المرور
+    // دالة لإعادة تعيين كلمة المرور
     function forgotPassword() {
       const email = prompt("أدخل بريدك الإلكتروني:");
       if (email) {
-        auth.sendPasswordResetEmail(email)
-          .then(() => alert("تم إرسال رابط إعادة التعيين إلى بريدك"))
+        firebase.auth().sendPasswordResetEmail(email)
+          .then(() => alert("تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني"))
           .catch(error => alert(error.message));
       }
     }
