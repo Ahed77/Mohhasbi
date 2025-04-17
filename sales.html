@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <!-- مكتبة html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- مكتبة jsPDF لتوليد ملفات PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -24,6 +26,7 @@
       color: #fff;
       padding: 20px 10px;
       text-align: center;
+      position: relative;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 10px;
     }
@@ -54,6 +57,7 @@
     tr:hover {
       background-color: #f1f1f1;
     }
+    /* تنسيق النماذج للجوال */
     .modal-header.custom-header {
       background-color: #4ca1af;
       color: #fff;
@@ -62,6 +66,7 @@
     .modal-content {
       font-size: 0.9rem;
     }
+    /* زر عرض كل العمليات */
     #toggleSalesBtn {
       margin: 10px auto;
       display: block;
@@ -78,6 +83,7 @@
         width: auto;
       }
     }
+    /* تنسيق صفوف المنتجات داخل النموذج */
     .product-row {
       display: flex;
       gap: 5px;
@@ -96,8 +102,9 @@
   </style>
 </head>
 <body>
-  <!-- رأس الصفحة -->
+  <!-- رأس الصفحة مع زر الرجوع -->
   <div class="header">
+    </button>
     <h1>نظام إدارة المبيعات</h1>
     <p>لوحة تحكم متكاملة لإدارة عمليات البيع</p>
   </div>
@@ -161,7 +168,9 @@
                <label for="saleDate" class="form-label">التاريخ</label>
                <input type="date" class="form-control" id="saleDate" required>
              </div>
+             <!-- حاوية صفوف المنتجات -->
              <div id="productsContainer"></div>
+             <!-- زر إضافة صف منتج جديد -->
              <button type="button" class="btn btn-outline-secondary w-100 mb-2" id="addProductRowBtn">
                <i class="fa-solid fa-plus"></i> إضافة منتج للفاتورة
              </button>
@@ -195,7 +204,9 @@
                <label for="editSaleDate" class="form-label">التاريخ</label>
                <input type="date" class="form-control" id="editSaleDate" required>
              </div>
+             <!-- حاوية صفوف المنتجات لنموذج التعديل -->
              <div id="editProductsContainer"></div>
+             <!-- زر إضافة صف منتج جديد لنموذج التعديل -->
              <button type="button" class="btn btn-outline-secondary w-100 mb-2" id="editAddProductRowBtn">
                <i class="fa-solid fa-plus"></i> إضافة منتج للفاتورة
              </button>
@@ -215,11 +226,12 @@
 
   <!-- سكريبت JavaScript لإدارة المبيعات والمخزون والطباعة والمشاركة -->
   <script>
-    // دوال استرجاع البيانات من localStorage
+    // استرجاع بيانات المخزون من localStorage
     function getProductsFromInventory() {
       const stored = localStorage.getItem("inventoryProducts");
       return stored ? JSON.parse(stored) : [];
     }
+    // دوال إدارة المبيعات في localStorage
     function getSales() {
       const stored = localStorage.getItem("sales");
       return stored ? JSON.parse(stored) : [];
@@ -373,6 +385,7 @@
     });
     // ========== نهاية دوال الإضافة ==========
 
+    // عند إرسال نموذج الإضافة
     document.getElementById("addSaleForm").addEventListener("submit", function(e){
       e.preventDefault();
       const invoice = document.getElementById("invoiceNumber").value;
@@ -499,6 +512,7 @@
       e.preventDefault();
       let oldSale = sales[currentEditIndex];
       let productsStock = getProductsFromInventory();
+      // إعادة كميات المنتجات القديمة للمخزون
       oldSale.products.forEach(item => {
         const prod = productsStock.find(p => p.id === item.productId);
         if(prod) prod.quantity += item.quantity;
@@ -532,6 +546,7 @@
       });
       if(!valid || saleProducts.length === 0) {
         showToast("يرجى التأكد من صحة بيانات المنتجات أو الكميات المتوفرة!", "danger");
+        // إعادة طرح الكميات القديمة في حال حدوث خطأ
         oldSale.products.forEach(item => {
           const prod = productsStock.find(p => p.id === item.productId);
           if(prod) prod.quantity -= item.quantity;
@@ -548,10 +563,12 @@
     });
     // ========== نهاية دوال نموذج التعديل ==========
 
-    // ========== دوال توليد صورة الفاتورة للطباعة والمشاركة ==========
-    function generateInvoiceHTML(sale) {
-      return `
-        <div style="font-family: 'Cairo', sans-serif; padding: 20px; background: #fff; width: 800px;">
+    // ========== دوال توليد فاتورة PDF للطباعة والمشاركة ==========
+    function printInvoice(index) {
+      const sale = sales[index];
+      // محتوى الفاتورة بتنسيق HTML (سيتم تحويله إلى PDF)
+      let invoiceHTML = `
+        <div style="font-family: 'Cairo', sans-serif; padding: 20px;">
           <div style="text-align: center; border-bottom: 2px solid #4ca1af; padding-bottom: 10px; margin-bottom: 20px;">
             <h1 style="font-size: 24px; margin: 0; color: #4ca1af;">فاتورة البيع</h1>
           </div>
@@ -563,9 +580,7 @@
             <p><strong style="display:inline-block; width: 140px;">رقم الفاتورة:</strong> ${sale.invoice}</p>
             <p><strong style="display:inline-block; width: 140px;">التاريخ:</strong> ${sale.date}</p>
             <p><strong style="display:inline-block; width: 140px;">المنتجات:</strong></p>
-            ${sale.products.map(item => `
-              <p style="margin:2px 0;"> - ${item.productName} | كمية: ${item.quantity} | سعر: ${item.price} | إجمالي: ${item.total}</p>
-            `).join('')}
+            ${sale.products.map(item => `<p style="margin:2px 0;"> - ${item.productName} | كمية: ${item.quantity} | سعر: ${item.price} | إجمالي: ${item.total}</p>`).join('')}
             <p><strong style="display:inline-block; width: 140px;">الإجمالي الكلي:</strong> ${sale.total}</p>
           </div>
           <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #888;">
@@ -573,99 +588,93 @@
           </div>
         </div>
       `;
-    }
-
-    function generateInvoiceImage(sale, callback) {
-      let invoiceHTML = generateInvoiceHTML(sale);
+      // إنشاء عنصر مؤقت لإدراج المحتوى
       let tempDiv = document.createElement("div");
       tempDiv.style.position = "absolute";
       tempDiv.style.left = "-9999px";
       tempDiv.innerHTML = invoiceHTML;
       document.body.appendChild(tempDiv);
 
-      html2canvas(tempDiv, { scale: 2 }).then(canvas => {
-        let imgData = canvas.toDataURL("image/png");
-        document.body.removeChild(tempDiv);
-        callback(imgData);
-      }).catch(err => {
-        document.body.removeChild(tempDiv);
-        console.error("خطأ في توليد صورة الفاتورة:", err);
-        callback(null);
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF('p', 'pt', 'a4');
+      doc.html(tempDiv, {
+        callback: function (doc) {
+          document.body.removeChild(tempDiv);
+          // الحصول على ملف PDF بنسق base64
+          let pdfBase64 = doc.output('datauristring');
+          if (typeof Android !== "undefined" && Android.printInvoice) {
+            Android.printInvoice(pdfBase64);
+            showToast("تم إرسال الفاتورة إلى الطابعة!");
+          } else {
+            // طريقة احتياطية: فتح ملف PDF في نافذة جديدة
+            let pdfBlob = doc.output('blob');
+            let pdfUrl = URL.createObjectURL(pdfBlob);
+            window.open(pdfUrl);
+            showToast("تم إنشاء فاتورة PDF.");
+          }
+        },
+        x: 10,
+        y: 10,
+        width: 575
       });
     }
 
-    // دالة الطباعة: تفتح نافذة جديدة وتستدعي أمر الطباعة
-    function printInvoice(index) {
-      const sale = sales[index];
-      generateInvoiceImage(sale, function(imgData) {
-        if (!imgData) {
-          showToast("حدث خطأ أثناء إنشاء صورة الفاتورة!", "danger");
-          return;
-        }
-        let printWindow = window.open('', 'Print-Window');
-        printWindow.document.write(`<html><head><title>طباعة الفاتورة</title>
-          <style>body{margin:0;padding:20px;text-align:center;}</style>
-          </head><body><img src="${imgData}" style="max-width:100%;"/></body></html>`);
-        printWindow.document.close();
-        printWindow.focus();
-        // تأخير بسيط حتى يتم تحميل الصورة ثم طباعة النافذة
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 500);
-      });
-    }
-
-    // دالة المشاركة: تستخدم Web Share API إن كانت مدعومة
     function shareInvoice(index) {
       const sale = sales[index];
-      generateInvoiceImage(sale, function(imgData) {
-        if (!imgData) {
-          showToast("حدث خطأ أثناء إنشاء صورة الفاتورة!", "danger");
-          return;
-        }
-        // تحويل dataURL إلى ملف لكي يمكن مشاركته باستخدام Web Share API (إن كانت مدعومة)
-        function dataURLtoFile(dataurl, filename) {
-          var arr = dataurl.split(','),
-              mime = arr[0].match(/:(.*?);/)[1],
-              bstr = atob(arr[1]), n = bstr.length,
-              u8arr = new Uint8Array(n);
-          while(n--){
-              u8arr[n] = bstr.charCodeAt(n);
-          }
-          return new File([u8arr], filename, {type:mime});
-        }
-        const invoiceFile = dataURLtoFile(imgData, "invoice.png");
-        if(navigator.share) {
-          navigator.share({
-            title: 'فاتورة البيع',
-            text: 'تم إنشاء فاتورة البيع',
-            files: [invoiceFile]
-          }).then(() => {
+      let invoiceHTML = `
+        <div style="font-family: 'Cairo', sans-serif; padding: 20px;">
+          <div style="text-align: center; border-bottom: 2px solid #4ca1af; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="font-size: 24px; margin: 0; color: #4ca1af;">فاتورة البيع</h1>
+          </div>
+          <div style="text-align: right; margin-bottom: 20px; font-size: 14px; color: #555;">
+            <p>اسم الشركة: نظام إدارة المبيعات الاحترافي</p>
+            <p>تاريخ الطباعة: ${new Date().toLocaleString("ar-EG")}</p>
+          </div>
+          <div style="text-align: right; font-size: 16px; margin: 5px 0;">
+            <p><strong style="display:inline-block; width: 140px;">رقم الفاتورة:</strong> ${sale.invoice}</p>
+            <p><strong style="display:inline-block; width: 140px;">التاريخ:</strong> ${sale.date}</p>
+            <p><strong style="display:inline-block; width: 140px;">المنتجات:</strong></p>
+            ${sale.products.map(item => `<p style="margin:2px 0;"> - ${item.productName} | كمية: ${item.quantity} | سعر: ${item.price} | إجمالي: ${item.total}</p>`).join('')}
+            <p><strong style="display:inline-block; width: 140px;">الإجمالي الكلي:</strong> ${sale.total}</p>
+          </div>
+          <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #888;">
+            <p>شكراً لاستخدام نظام إدارة المبيعات الاحترافي</p>
+          </div>
+        </div>
+      `;
+      let tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.innerHTML = invoiceHTML;
+      document.body.appendChild(tempDiv);
+
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF('p', 'pt', 'a4');
+      doc.html(tempDiv, {
+        callback: function (doc) {
+          document.body.removeChild(tempDiv);
+          let pdfBase64 = doc.output('datauristring');
+          if (typeof Android !== "undefined" && Android.shareInvoice) {
+            Android.shareInvoice(pdfBase64);
             showToast("تم مشاركة الفاتورة بنجاح!");
-          }).catch(err => {
-            console.error("خطأ في المشاركة:", err);
-            showToast("تعذر مشاركة الفاتورة!", "danger");
-          });
-        } else {
-          // في حالة عدم دعم Web Share API يتم فتح الصورة في نافذة جديدة للمشاركة اليدوية
-          let shareWindow = window.open();
-          shareWindow.document.write(`<html><head><title>مشاركة الفاتورة</title></head><body>
-            <img src="${imgData}" style="width:100%;"/>
-            <p>يمكنك مشاركة هذه الصورة يدويًا.</p>
-            </body></html>`);
-          shareWindow.document.close();
-          showToast("تم إنشاء صورة الفاتورة، يمكنك مشاركتها يدويًا.", "info");
-        }
+          } else {
+            doc.save("invoice.pdf");
+            showToast("تم تنزيل فاتورة PDF، يمكنك مشاركتها يدوياً.", "info");
+          }
+        },
+        x: 10,
+        y: 10,
+        width: 575
       });
     }
-    // ========== نهاية دوال توليد صورة الفاتورة ==========
+    // ========== نهاية دوال توليد فاتورة PDF ==========
 
     // ========== دوال الحذف ==========
     function deleteSale(index) {
       if(confirm("هل أنت متأكد من حذف هذا البيع؟")) {
         const sale = sales[index];
         let productsStock = getProductsFromInventory();
+        // إعادة كميات كل منتج من الفاتورة إلى المخزون
         sale.products.forEach(item => {
           const prod = productsStock.find(p => p.id === item.productId);
           if(prod) {
