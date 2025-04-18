@@ -123,7 +123,7 @@
       90% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-20px); }
     }
-    /* قسم تفاصيل المدين مع رأس ثابت */
+    /* قسم تفاصيل المدين مع رأس ثابت وأزرار الإجراءات */
     .debtor-header {
       position: sticky;
       top: 0;
@@ -132,14 +132,32 @@
       border-bottom: 1px solid #ddd;
       z-index: 1050;
       display: flex;
-      justify-content: center;
+      flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
     }
     .debtor-header h2 {
       margin: 0;
       font-size: 1.5rem;
       font-weight: 700;
       color: #4b6cb7;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .action-buttons button {
+      background: #17a2b8;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .action-buttons button:hover {
+      background: #138496;
     }
     /* شريط المعلومات في أسفل الصفحة مع تدرج داكن */
     #debtRatioBar {
@@ -244,9 +262,14 @@
 
     <!-- واجهة تفاصيل المدين -->
     <section id="detailsView" class="container-view" style="display:none; opacity:0;">
-      <!-- رأس ثابت لعرض اسم المدين -->
+      <!-- رأس ثابت لعرض اسم المدين وأزرار الإجراءات -->
       <div class="debtor-header">
         <h2 id="debtorName"></h2>
+        <div class="action-buttons">
+          <button id="shareDetailsBtn"><i class="fa-solid fa-share"></i> مشاركة التفاصيل</button>
+          <button id="callDebtorBtn" style="display:none;"><i class="fa-solid fa-phone"></i> اتصل</button>
+          <button id="smsDebtorBtn" style="display:none;"><i class="fa-solid fa-sms"></i> رسالة نصية</button>
+        </div>
       </div>
       <!-- بيانات المدين -->
       <section id="debtorInfo" class="mt-3">
@@ -356,6 +379,10 @@
                <label for="debtorNameInput" class="form-label">اسم المدين</label>
                <input type="text" class="form-control" id="debtorNameInput" placeholder="أدخل اسم المدين" required>
              </div>
+             <div class="mb-3">
+               <label for="debtorPhoneInput" class="form-label">رقم الهاتف (اختياري)</label>
+               <input type="text" class="form-control" id="debtorPhoneInput" placeholder="أدخل رقم الهاتف">
+             </div>
              <button type="submit" class="btn btn-success btn-custom w-100">
                <i class="fa-solid fa-check"></i> حفظ
              </button>
@@ -379,6 +406,7 @@
         {
           id: "001",
           debtorName: "أحمد",
+          debtorPhone: "0123456789",
           transactions: [
             { amount: 500, date: "2025-01-01", description: "دين مبدئي" },
             { amount: -200, date: "2025-01-05", description: "سداد جزئي" }
@@ -387,6 +415,7 @@
         {
           id: "002",
           debtorName: "سارة",
+          debtorPhone: "",
           transactions: [
             { amount: 300, date: "2025-02-10", description: "دين مبدئي" }
           ]
@@ -480,6 +509,15 @@
         setTimeout(() => document.getElementById("detailsView").style.opacity = 1, 50);
         document.getElementById("fabAddDebtor").style.display = "none";
         document.getElementById("fabAddTransaction").style.display = "flex";
+
+        // عرض أزرار الاتصال والرسالة إن وجد رقم هاتف
+        if (currentDebtor.debtorPhone && currentDebtor.debtorPhone.trim() !== "") {
+          document.getElementById("callDebtorBtn").style.display = "inline-block";
+          document.getElementById("smsDebtorBtn").style.display = "inline-block";
+        } else {
+          document.getElementById("callDebtorBtn").style.display = "none";
+          document.getElementById("smsDebtorBtn").style.display = "none";
+        }
       };
 
       // العودة إلى قائمة المدينين
@@ -601,6 +639,46 @@
       // زر الرجوع من واجهة التفاصيل عبر شريط المعلومات السفلي
       document.getElementById("debtRatioBar").addEventListener("click", showListView);
 
+      // زر مشاركة تفاصيل ديون العميل
+      document.getElementById("shareDetailsBtn").addEventListener("click", () => {
+        if (!currentDebtor) return;
+        const totalDebt = calculateTotalDebt(currentDebtor.transactions);
+        let detailsText = `تفاصيل ديون العميل:\nالاسم: ${currentDebtor.debtorName}\nرقم المدين: ${currentDebtor.id}\nإجمالي الدين: ${totalDebt} ريال`;
+        if(currentDebtor.debtorPhone && currentDebtor.debtorPhone.trim() !== "") {
+          detailsText += `\nرقم الهاتف: ${currentDebtor.debtorPhone}`;
+        }
+        if (navigator.share) {
+          navigator.share({
+            title: 'تفاصيل ديون العميل',
+            text: detailsText
+          }).then(() => {
+            showToast("تمت المشاركة بنجاح!", "success");
+          }).catch((err) => {
+            console.error("خطأ أثناء المشاركة:", err);
+            showToast("فشل مشاركة التفاصيل!", "danger");
+          });
+        } else {
+          alert("المشاركة غير مدعومة في هذا المتصفح.\n" + detailsText);
+        }
+      });
+
+      // زر الاتصال: عند النقر يتم فتح تطبيق الهاتف برقم العميل
+      document.getElementById("callDebtorBtn").addEventListener("click", () => {
+        if(currentDebtor && currentDebtor.debtorPhone) {
+          window.location.href = `tel:${currentDebtor.debtorPhone}`;
+        }
+      });
+
+      // زر الرسالة النصية: عند النقر يتم فتح تطبيق الرسائل مع تعبئة نص الرسالة بتفاصيل الفاتورة تلقائيًا
+      document.getElementById("smsDebtorBtn").addEventListener("click", () => {
+        if(currentDebtor && currentDebtor.debtorPhone) {
+          const totalDebt = calculateTotalDebt(currentDebtor.transactions);
+          let smsText = `تفاصيل ديون العميل:\nالاسم: ${currentDebtor.debtorName}\nرقم المدين: ${currentDebtor.id}\nإجمالي الدين: ${totalDebt} ريال`;
+          // يمكن إضافة تفاصيل إضافية عند الحاجة
+          window.location.href = `sms:${currentDebtor.debtorPhone}?body=${encodeURIComponent(smsText)}`;
+        }
+      });
+
       // عند فتح نافذة إضافة/تعديل معاملة جديدة، تعبئة التاريخ الحالي تلقائيًا إذا كانت عملية إضافة جديدة
       document.getElementById("fabAddTransaction").addEventListener("click", () => {
         transactionEditIndex = -1;
@@ -645,6 +723,11 @@
               const contact = contacts[0];
               const name = Array.isArray(contact.name) ? contact.name.join(" ") : contact.name;
               document.getElementById("debtorNameInput").value = name || "";
+              // تعبئة رقم الهاتف إن وُجد
+              if (contact.tel) {
+                const phone = Array.isArray(contact.tel) ? contact.tel[0] : contact.tel;
+                document.getElementById("debtorPhoneInput").value = phone || "";
+              }
               showToast("تم استيراد جهة الاتصال بنجاح!", "success");
             }
           } catch (err) {
@@ -666,8 +749,9 @@
         e.preventDefault();
         const id = document.getElementById("debtorId").value;
         const name = document.getElementById("debtorNameInput").value.trim();
+        const phone = document.getElementById("debtorPhoneInput").value.trim();
         if (name) {
-          debtors.push({ id, debtorName: name, transactions: [] });
+          debtors.push({ id, debtorName: name, debtorPhone: phone, transactions: [] });
           saveData();
           renderDebtorsTable();
           showToast("تم إضافة المدين بنجاح!");
